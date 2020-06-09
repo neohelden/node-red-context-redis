@@ -1,6 +1,6 @@
 {
   "name": "node-red-context-redis",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A Node-RED Context store plugin backed by Redis",
   "main": "index.js",
   "scripts": {
