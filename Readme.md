@@ -40,6 +40,7 @@ It needs following configuration options:
 | prefix   | If set, the string used to prefix all used keys.                                                            |
 | password | If set, the plugin will run Redis AUTH command on connect. *Note: the password will be sent as plaintext.*  |
 | tls      | An object containing options to pass to tls.connect to set up a TLS connection to the server.               |
+| ttl      | Defaul 10 min
 
 see https://github.com/NodeRedis/node_redis#options-object-properties
 

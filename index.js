@@ -34,6 +34,7 @@
  *                             // default: undefined
  *    tls:                     // An object containing options to pass to tls.connect to set up a TLS connection to Redis
  *                             // default: undefined
+ *    ttl:                      default 10 min
  *  }
  *
  * This plugin prefixes all used keys with context scope.
@@ -171,6 +172,7 @@ function Redis(config) {
     this.host = config.host || '127.0.0.1';
     this.port = config.port || 6379;
     this.prefix = config.prefix;
+    this.ttl = config.ttl || 60000;
     this.options = {
         db: config.db || 0,
         password: config.password,
@@ -180,7 +182,7 @@ function Redis(config) {
                 // End reconnecting on a specific error and flush all commands with
                 // a individual error
                 return new Error('The server cannot be found');
-            }            
+            }
             if (options.error && options.error.code === 'ECONNREFUSED') {
                 // End reconnecting on a specific error and flush all commands with
                 // a individual error
@@ -312,7 +314,7 @@ Redis.prototype.set = function (scope, key, value, callback) {
         let delArgs = [];
         // parse key
         const keyParts = key.map(key => util.normalisePropertyExpression(key));
-
+        const applyKey = addPrefix(this.prefix, scope, keyParts[0][0]);
         for (let i = 0; i < key.length; i++) {
             if (i >= value.length) {
                 value[i] = null;
@@ -370,6 +372,7 @@ Redis.prototype.set = function (scope, key, value, callback) {
         if (delArgs.length > 0) {
             multi.DEL(...delArgs);
         }
+        multi.expire(applyKey, this.ttl);
         // Execute commands at once with transactions
         multi.EXEC((err, replies) => {
             if (err) {
@@ -422,7 +425,7 @@ Redis.prototype.clean = function (_activeNodes) {
     this.knownCircularRefs = {};
 
     const prefix = this.prefix;
-    if(!prefix){
+    if (!prefix) {
         return Promise.resolve();
     }
 
@@ -432,11 +435,11 @@ Redis.prototype.clean = function (_activeNodes) {
                 reject(err);
             } else {
                 //if(this.options.prefix){
-                    //res = res.map(key => key.substring(prefix.length))
+                //res = res.map(key => key.substring(prefix.length))
                 //}
-                res = res.filter(key => !key.startsWith( prefix + ":global"))
+                res = res.filter(key => !key.startsWith(prefix + ":global"))
                 _activeNodes.forEach(scope => {
-                    res = res.filter(key => !key.startsWith( prefix + ':' + scope))
+                    res = res.filter(key => !key.startsWith(prefix + ':' + scope))
                 })
                 if (res.length > 0) {
                     this.client.DEL(...res, (err) => {
