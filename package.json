@@ -28,6 +28,9 @@
     "node-red",
     "redis"
   ],
+  "publishConfig": {
+    "registry": "https://nexus.sestek.com/repository/npm-sestek"
+  },
   "engines": {
     "node": ">=8"
   }
